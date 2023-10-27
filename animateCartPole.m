@@ -39,8 +39,8 @@ end
 
 % v_handle = VideoWriter('cartPoleBalancingLQR','MPEG-4');
 % open(v_handle);
-
-for i = 1:2:length(t)
+divider     = paras.div;
+for i = 1:divider:length(t)
     x           = xPos(i)+a*sin(theta(i));
     y           = yc-a*cos(theta(i));
     locateX(i)  = x(length(x));
@@ -49,7 +49,7 @@ for i = 1:2:length(t)
     set(cart,'XData',[xPos(i)-w/2 xPos(i)+w/2 xPos(i)+w/2 xPos(i)-w/2]);
     set(pole,'XData',x,'YData',y);
     set(k,'XData',locateX(i),'YData',locateY(i));
-    set(traj,'XData',locateX(1:i),'YData',locateY(1:i));
+    set(traj,'XData',locateX(1:divider:i),'YData',locateY(1:divider:i));
 
     drawnow;
     if max(xPos) > 5 || min(xPos) < -5
@@ -58,9 +58,11 @@ for i = 1:2:length(t)
     else
         xlim([-5 5]);
     end
+
 %     frame = getframe(fig(1));
 %     writeVideo(v_handle,frame);
 end
+pause(0.5);
 hold off; clf;
 % close(v_handle);
 end

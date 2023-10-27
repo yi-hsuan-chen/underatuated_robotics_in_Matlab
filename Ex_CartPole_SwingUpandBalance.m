@@ -20,38 +20,45 @@ ueq         = 0;
 paras.xeq   = xeq;
 
 % SwingUp energy shaping controller parameters
-paras.k     = 8;      
-paras.kp    = 4;
-paras.kd    = 0.1;
+paras.k     = 0.5;      
+paras.kp    = 1.8;
+paras.kd    = 0.2;
 
 % Balancing using LQR
 [A,B]       = linearize(xeq,ueq);
-Q           = diag([10,10,1,1]);
+Q           = diag([15,15,1,1]);
 R           = 1;
 [K,S]       = lqr(A,B,Q,R);
 paras.K     = K;
 paras.S     = S;
 
-u           = @SwingUpAndBalanceController;
-fcl         = @(t,x) dynamics(t,x,u(t,x,paras));
-tspan       = [0 15];
+tspan       = [0 30];
 
-nSim        = 5;
+
+nSim        = 10;
+u           = @SwingUpAndBalanceController;
+paras.div   = 100;
 for i = 1:nSim
 x0          = randn(4,1);
-% x0          = [1; pi-pi/4; 0.2 ; 0];
-[t,X]       = ode45(fcl,tspan,x0);
+[t,X]       = rk4(@(t,x) dynamics(t,x,u(x,paras)),tspan,x0);
 xPos        = X(:,1);
 theta       = wrapTo2Pi(X(:,2));
-theta(end)
+Xout        = [xPos theta X(:,3:4)];
+err         =  Xout(end,:)' - xeq;
+if abs(norm(err)) < 0.1
+    disp('succeed!');
+else
+    x0_crit{i} = x0;
+    disp('failed :(');
+end
 % Visualization and animation
 title(sprintf('Simulation: %d',i),'Interpreter','latex','FontSize',18);
-animateCartPole(t,xPos,theta,paras)
+animateCartPole(t,xPos,theta,paras);
 end
 close all;
 
 
-function u = SwingUpAndBalanceController(t,X,paras)
+function u = SwingUpAndBalanceController(X,paras)
 K       = paras.K;
 S       = paras.S;
 k       = paras.k;
@@ -67,7 +74,7 @@ xbar    = X;
 xbar(2) = wrapTo2Pi(xbar(2))-pi;
 
 % If x'Sx <= ??, then use the LQR controller
-if xbar'*S*xbar <= 15 || abs(xbar(2)) < pi/10
+if xbar'*S*xbar <= 40
     u   = -K*xbar;
 else
     cT      = cos(theta);

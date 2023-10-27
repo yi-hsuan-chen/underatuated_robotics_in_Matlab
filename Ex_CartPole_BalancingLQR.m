@@ -26,10 +26,11 @@ controller  = @(x) -K*(x-xeq);
 fcl         = @(t,x) dynamics(t,x,controller(x));
 tspan       = [0 8];
 
-nSim        = 3;
+nSim        = 5;
+paras.div   = 100;
 for i = 1:nSim
 x0          = xeq+0.4*randn(4,1);
-[t,X]       = ode45(fcl,tspan,x0);
+[t,X]       = rk4(fcl,tspan,x0);
 xPos        = X(:,1);
 theta       = X(:,2);
 % Visualization and animation
